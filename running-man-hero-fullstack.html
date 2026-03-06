@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running Man Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { background: #eee; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Game {
+            constructor() {
+                this.player = { x: 50, y: canvas.height - 60, width: 50, height: 50, speed: 4 };
+                this.score = 0;
+                this.level = 1;
+                this.difficulties = [4, 6, 8];
+                this.obstacles = [];
+                this.isGameOver = false;
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'ArrowRight') this.player.x += this.player.speed;
+                    if (event.key === 'ArrowLeft') this.player.x -= this.player.speed;
+                });
+            }
+
+            start() {
+                this.spawnObstacles();
+                this.update();
+            }
+
+            spawnObstacles() {
+                setInterval(() => {
+                    const height = Math.random() * 50 + 20;
+                    this.obstacles.push({ x: canvas.width, y: canvas.height - height, width: 30, height });
+                    if (this.obstacles.length > 20) this.obstacles.shift();
+                }, 2000);
+            }
+
+            update() {
+                if (this.isGameOver) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                this.drawPlayer();
+                this.drawObstacles();
+                this.checkCollisions();
+                this.score++;  
+                requestAnimationFrame(() => this.update());
+            }
+
+            drawPlayer() {
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(this.player.x, this.player.y, this.player.width, this.player.height);
+            }
+
+            drawObstacles() {
+                ctx.fillStyle = 'red';
+                this.obstacles.forEach(obstacle => {
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                    obstacle.x -= this.difficulties[this.level - 1];
+                });
+            }
+
+            checkCollisions() {
+                this.obstacles.forEach(obstacle => {
+                    if (this.player.x < obstacle.x + obstacle.width && 
+                        this.player.x + this.player.width > obstacle.x && 
+                        this.player.y < obstacle.y + obstacle.height && 
+                        this.player.y + this.player.height > obstacle.y) {
+                        this.isGameOver = true;
+                        alert('Game Over! Your score: ' + this.score);
+                        document.location.reload();
+                    }
+                });
+            }
+        }
+
+        const game = new Game();
+        game.start();
+    </script>
+</body>
+</html>
